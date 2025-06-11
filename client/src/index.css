@@ -4,24 +4,24 @@
 
 :root {
   --background: hsl(0, 0%, 100%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(60, 4.8%, 95.9%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --foreground: hsl(0, 0%, 0%);
+  --muted: hsl(197, 100%, 95%);
+  --muted-foreground: hsl(0, 0%, 20%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --popover-foreground: hsl(0, 0%, 0%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 90%);
-  --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(217, 91%, 60%);
-  --primary-foreground: hsl(210, 40%, 98%);
-  --secondary: hsl(60, 4.8%, 95.9%);
-  --secondary-foreground: hsl(24, 9.8%, 10%);
-  --accent: hsl(60, 4.8%, 95.9%);
-  --accent-foreground: hsl(24, 9.8%, 10%);
+  --card-foreground: hsl(0, 0%, 0%);
+  --border: hsl(197, 100%, 85%);
+  --input: hsl(197, 100%, 95%);
+  --primary: hsl(51, 100%, 50%);
+  --primary-foreground: hsl(0, 0%, 0%);
+  --secondary: hsl(197, 100%, 85%);
+  --secondary-foreground: hsl(0, 0%, 0%);
+  --accent: hsl(51, 100%, 95%);
+  --accent-foreground: hsl(0, 0%, 0%);
   --destructive: hsl(0, 84.2%, 60.2%);
-  --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --ring: hsl(0, 0%, 0%);
   --radius: 0.5rem;
 }
 
@@ -59,13 +59,39 @@
   }
 }
 
-/* Custom styles for better visual hierarchy */
+/* Custom styles for new color scheme */
 .slider {
-  background: linear-gradient(to right, hsl(217, 91%, 60%) 0%, hsl(217, 91%, 60%) 50%, hsl(60, 4.8%, 95.9%) 50%, hsl(60, 4.8%, 95.9%) 100%);
+  background: linear-gradient(to right, hsl(51, 100%, 50%) 0%, hsl(51, 100%, 50%) 50%, hsl(197, 100%, 95%) 50%, hsl(197, 100%, 95%) 100%);
 }
 
 .slider::-webkit-slider-thumb {
-  background: hsl(217, 91%, 60%);
-  border: 2px solid white;
+  background: hsl(51, 100%, 50%);
+  border: 2px solid hsl(0, 0%, 0%);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Notification styles */
+.turn-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background: hsl(51, 100%, 50%);
+  color: hsl(0, 0%, 0%);
+  border: 2px solid hsl(0, 0%, 0%);
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }

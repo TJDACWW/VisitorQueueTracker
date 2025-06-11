@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import type { Group, InsertGroup } from "@shared/schema";
+import type { Group, InsertGroup, Staff, InsertStaff } from "@shared/schema";
 
 export function useGroups() {
   return useQuery<Group[]>({
@@ -60,6 +60,39 @@ export function useUpdateSetting() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+    },
+  });
+}
+
+export function useStaff() {
+  return useQuery<Staff[]>({
+    queryKey: ["/api/staff"],
+  });
+}
+
+export function useCreateStaff() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: InsertStaff) => {
+      const response = await apiRequest("POST", "/api/staff", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
+    },
+  });
+}
+
+export function useDeleteStaff() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/staff/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
     },
   });
 }

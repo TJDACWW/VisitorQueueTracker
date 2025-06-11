@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useUpdateGroup } from "@/hooks/use-queue";
+import { useUpdateGroup, useStaff } from "@/hooks/use-queue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,8 +20,8 @@ interface GroupCardProps {
 export function GroupCard({ group, waitTime }: GroupCardProps) {
   const { toast } = useToast();
   const updateGroup = useUpdateGroup();
+  const { data: staff = [] } = useStaff();
   const [notes, setNotes] = useState(group.notes || "");
-  const [staffName, setStaffName] = useState(group.assignedStaff || "");
 
   const handleStatusChange = async (newStatus: "waiting" | "in-progress" | "completed") => {
     try {
@@ -43,13 +43,11 @@ export function GroupCard({ group, waitTime }: GroupCardProps) {
     }
   };
 
-  const handleStaffChange = async () => {
-    if (staffName === group.assignedStaff) return;
-    
+  const handleStaffChange = async (staffName: string) => {
     try {
       await updateGroup.mutateAsync({
         id: group.id,
-        updates: { assignedStaff: staffName || null }
+        updates: { assignedStaff: staffName === "unassigned" ? null : staffName }
       });
     } catch (error) {
       toast({
