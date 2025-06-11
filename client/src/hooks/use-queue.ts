@@ -67,7 +67,7 @@ export function useUpdateSetting() {
 export function calculateWaitTime(
   groups: Group[],
   concurrentGroups: number,
-  activityDuration: number,
+  defaultActivityDuration: number,
   targetGroupId?: number
 ): { waitMinutes: number; estimatedTime: string } {
   const waitingGroups = groups
@@ -75,21 +75,25 @@ export function calculateWaitTime(
     .sort((a, b) => a.queuePosition - b.queuePosition);
 
   const inProgressGroups = groups.filter(g => g.status === "in-progress");
+  const slotsBeingUsed = inProgressGroups.length;
+  const availableSlots = Math.max(0, concurrentGroups - slotsBeingUsed);
   
   if (targetGroupId) {
     const targetIndex = waitingGroups.findIndex(g => g.id === targetGroupId);
     if (targetIndex === -1) return { waitMinutes: 0, estimatedTime: "Now" };
     
-    const groupsAhead = targetIndex;
-    const slotsBeingUsed = inProgressGroups.length;
-    const availableSlots = Math.max(0, concurrentGroups - slotsBeingUsed);
-    
-    if (groupsAhead < availableSlots) {
+    // Only count wait time if the group position exceeds available slots
+    if (targetIndex < availableSlots) {
       return { waitMinutes: 0, estimatedTime: "Now" };
     }
     
-    const groupsToWaitFor = groupsAhead - availableSlots;
-    const batchesNeeded = Math.ceil(groupsToWaitFor / concurrentGroups);
+    // Calculate wait time based on groups ahead that need to wait
+    const groupsAheadToWait = targetIndex - availableSlots;
+    const target = waitingGroups[targetIndex];
+    const activityDuration = target.activityDuration || defaultActivityDuration;
+    
+    // Calculate batches of concurrent groups that need to complete first
+    const batchesNeeded = Math.ceil((groupsAheadToWait + 1) / concurrentGroups);
     const waitMinutes = batchesNeeded * activityDuration;
     
     const estimatedTime = new Date(Date.now() + waitMinutes * 60000)
@@ -104,16 +108,19 @@ export function calculateWaitTime(
   
   // Calculate for next group to register
   const totalWaiting = waitingGroups.length;
-  const slotsBeingUsed = inProgressGroups.length;
-  const availableSlots = Math.max(0, concurrentGroups - slotsBeingUsed);
   
-  if (totalWaiting < availableSlots) {
+  if (totalWaiting < concurrentGroups) {
     return { waitMinutes: 0, estimatedTime: "Now" };
   }
   
+  // Only groups beyond the concurrent limit need to wait
   const groupsToWaitFor = totalWaiting - availableSlots + 1;
+  if (groupsToWaitFor <= 0) {
+    return { waitMinutes: 0, estimatedTime: "Now" };
+  }
+  
   const batchesNeeded = Math.ceil(groupsToWaitFor / concurrentGroups);
-  const waitMinutes = batchesNeeded * activityDuration;
+  const waitMinutes = batchesNeeded * defaultActivityDuration;
   
   const estimatedTime = new Date(Date.now() + waitMinutes * 60000)
     .toLocaleTimeString('en-US', { 

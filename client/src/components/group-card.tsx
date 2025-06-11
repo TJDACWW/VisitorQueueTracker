@@ -6,10 +6,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
 import { Users, Clock, Play, Check } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { staffMembers } from "@shared/schema";
 import type { Group } from "@shared/schema";
 
 interface GroupCardProps {
@@ -21,6 +21,7 @@ export function GroupCard({ group, waitTime }: GroupCardProps) {
   const { toast } = useToast();
   const updateGroup = useUpdateGroup();
   const [notes, setNotes] = useState(group.notes || "");
+  const [staffName, setStaffName] = useState(group.assignedStaff || "");
 
   const handleStatusChange = async (newStatus: "waiting" | "in-progress" | "completed") => {
     try {
@@ -42,16 +43,33 @@ export function GroupCard({ group, waitTime }: GroupCardProps) {
     }
   };
 
-  const handleStaffChange = async (staffMember: string) => {
+  const handleStaffChange = async () => {
+    if (staffName === group.assignedStaff) return;
+    
     try {
       await updateGroup.mutateAsync({
         id: group.id,
-        updates: { assignedStaff: staffMember }
+        updates: { assignedStaff: staffName || null }
       });
     } catch (error) {
       toast({
         title: "Update Failed",
         description: "Failed to assign staff member.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDurationChange = async (value: number[]) => {
+    try {
+      await updateGroup.mutateAsync({
+        id: group.id,
+        updates: { activityDuration: value[0] }
+      });
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update activity duration.",
         variant: "destructive",
       });
     }
@@ -117,7 +135,9 @@ export function GroupCard({ group, waitTime }: GroupCardProps) {
           <div className="flex-1">
             <div className="flex items-center space-x-3 mb-2">
               <div className={getStatusIndicator(group.status)} />
-              <h3 className="font-semibold text-gray-900">{group.contactName}</h3>
+              <h3 className="font-semibold text-gray-900">
+                Group #{group.id} ({group.members[0] || 'Unknown'})
+              </h3>
               <Badge className={getStatusColor(group.status)}>
                 {group.status.toUpperCase().replace("-", " ")}
               </Badge>
@@ -149,23 +169,14 @@ export function GroupCard({ group, waitTime }: GroupCardProps) {
               )}
             </div>
             
-            <div className="flex items-center space-x-4">
-              <Select
-                value={group.assignedStaff || "unassigned"}
-                onValueChange={(value) => handleStaffChange(value === "unassigned" ? "" : value)}
-              >
-                <SelectTrigger className="w-40 text-sm">
-                  <SelectValue placeholder="Assign Staff" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Assign Staff</SelectItem>
-                  {staffMembers.map((staff) => (
-                    <SelectItem key={staff} value={staff}>
-                      {staff}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex items-center space-x-4 mb-2">
+              <Input
+                value={staffName}
+                onChange={(e) => setStaffName(e.target.value)}
+                onBlur={handleStaffChange}
+                placeholder="Assign staff member"
+                className="w-40 text-sm"
+              />
               
               <label className="flex items-center text-sm">
                 <Checkbox
@@ -175,6 +186,21 @@ export function GroupCard({ group, waitTime }: GroupCardProps) {
                 />
                 Present
               </label>
+            </div>
+            
+            <div className="flex items-center space-x-2 text-sm">
+              <span className="text-gray-600">Duration:</span>
+              <Slider
+                value={[group.activityDuration || 10]}
+                onValueChange={handleDurationChange}
+                max={30}
+                min={5}
+                step={1}
+                className="w-20"
+              />
+              <span className="font-medium text-blue-600 min-w-[50px]">
+                {group.activityDuration || 10} min
+              </span>
             </div>
           </div>
           

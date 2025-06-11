@@ -24,18 +24,26 @@ export function RegistrationForm() {
   const { data: groups = [] } = useGroups();
   const { data: settings = [] } = useSettings();
   
-  const concurrentGroups = parseInt(settings.find(s => s.key === "concurrentGroups")?.value || "2");
-  const activityDuration = parseInt(settings.find(s => s.key === "activityDuration")?.value || "10");
+  const settingsArray = Array.isArray(settings) ? settings : [];
+  const concurrentGroups = parseInt(settingsArray.find(s => s.key === "concurrentGroups")?.value || "2");
+  const defaultActivityDuration = parseInt(settingsArray.find(s => s.key === "activityDuration")?.value || "10");
   
-  const { waitMinutes, estimatedTime } = calculateWaitTime(groups, concurrentGroups, activityDuration);
+  const { waitMinutes, estimatedTime } = calculateWaitTime(groups, concurrentGroups, defaultActivityDuration);
   
   const form = useForm<RegistrationForm>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
       members: "",
-      activityDuration: 10,
+      activityDuration: defaultActivityDuration,
     },
   });
+
+  const membersValue = form.watch("members");
+  const membersList = membersValue
+    .split('\n')
+    .map(name => name.trim())
+    .filter(name => name.length > 0);
+  const groupSize = membersList.length;
 
   const onSubmit = async (data: RegistrationForm) => {
     try {
@@ -44,22 +52,30 @@ export function RegistrationForm() {
         .map(name => name.trim())
         .filter(name => name.length > 0);
       
+      if (members.length === 0) {
+        toast({
+          title: "Invalid Input",
+          description: "Please enter at least one group member.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       await createGroup.mutateAsync({
-        contactName: data.contactName,
         members,
-        size: data.size,
         status: "waiting",
         assignedStaff: null,
-        notes: "",
-        present: true,
+        notes: null,
+        present: false,
         startTime: null,
         endTime: null,
+        activityDuration: data.activityDuration,
       });
       
       form.reset();
       toast({
         title: "Group Registered",
-        description: `${data.contactName}'s group has been added to the queue.`,
+        description: `Group of ${members.length} has been added to the queue.`,
       });
     } catch (error) {
       toast({
@@ -85,34 +101,22 @@ export function RegistrationForm() {
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label htmlFor="contactName" className="text-sm font-medium text-gray-700">
-              Main Contact Name *
-            </Label>
-            <Input
-              id="contactName"
-              {...form.register("contactName")}
-              placeholder="Enter contact name"
-              className="mt-2"
-            />
-            {form.formState.errors.contactName && (
-              <p className="text-sm text-red-600 mt-1">
-                {form.formState.errors.contactName.message}
-              </p>
-            )}
-          </div>
-          
-          <div>
             <Label htmlFor="members" className="text-sm font-medium text-gray-700">
-              Group Members
+              Group Members *
             </Label>
             <Textarea
               id="members"
               {...form.register("members")}
-              rows={3}
-              placeholder="Enter names of all group members (one per line)"
+              rows={4}
+              placeholder="Enter all group member names (one per line)"
               className="mt-2 resize-none"
             />
-            <p className="text-xs text-gray-500 mt-1">Include the main contact in this list</p>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Enter one name per line</span>
+              <span className="font-medium">
+                {groupSize > 0 ? `${groupSize} member${groupSize !== 1 ? 's' : ''}` : '0 members'}
+              </span>
+            </div>
             {form.formState.errors.members && (
               <p className="text-sm text-red-600 mt-1">
                 {form.formState.errors.members.message}
@@ -121,23 +125,23 @@ export function RegistrationForm() {
           </div>
           
           <div>
-            <Label htmlFor="size" className="text-sm font-medium text-gray-700">
-              Total Group Size
+            <Label htmlFor="activityDuration" className="text-sm font-medium text-gray-700">
+              Activity Duration (minutes)
             </Label>
             <div className="relative mt-2">
               <Input
-                id="size"
+                id="activityDuration"
                 type="number"
-                min="1"
-                max="20"
-                {...form.register("size", { valueAsNumber: true })}
+                min="5"
+                max="30"
+                {...form.register("activityDuration", { valueAsNumber: true })}
                 className="pr-10"
               />
-              <Users className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Clock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             </div>
-            {form.formState.errors.size && (
+            {form.formState.errors.activityDuration && (
               <p className="text-sm text-red-600 mt-1">
-                {form.formState.errors.size.message}
+                {form.formState.errors.activityDuration.message}
               </p>
             )}
           </div>

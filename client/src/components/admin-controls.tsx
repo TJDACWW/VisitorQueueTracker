@@ -1,9 +1,9 @@
 import { useSettings, useUpdateSetting } from "@/hooks/use-queue";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Coffee } from "lucide-react";
+import { Coffee, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export function AdminControls() {
@@ -11,9 +11,12 @@ export function AdminControls() {
   const { data: settings = [] } = useSettings();
   const updateSetting = useUpdateSetting();
   
-  const concurrentGroups = parseInt(settings.find(s => s.key === "concurrentGroups")?.value || "2");
-  const activityDuration = parseInt(settings.find(s => s.key === "activityDuration")?.value || "10");
-  const isBreakTime = settings.find(s => s.key === "isBreakTime")?.value === "true";
+  const settingsArray = Array.isArray(settings) ? settings : [];
+  const concurrentGroups = parseInt(settingsArray.find(s => s.key === "concurrentGroups")?.value || "2");
+  const activityDuration = parseInt(settingsArray.find(s => s.key === "activityDuration")?.value || "10");
+  const isBreakTime = settingsArray.find(s => s.key === "isBreakTime")?.value === "true";
+  const breakStartTime = settingsArray.find(s => s.key === "breakStartTime")?.value || "";
+  const breakEndTime = settingsArray.find(s => s.key === "breakEndTime")?.value || "";
 
   const handleConcurrentGroupsChange = async (value: string) => {
     try {
@@ -27,13 +30,25 @@ export function AdminControls() {
     }
   };
 
-  const handleDurationChange = async (value: number[]) => {
+  const handleBreakStartTimeChange = async (value: string) => {
     try {
-      await updateSetting.mutateAsync({ key: "activityDuration", value: value[0].toString() });
+      await updateSetting.mutateAsync({ key: "breakStartTime", value });
     } catch (error) {
       toast({
         title: "Update Failed",
-        description: "Failed to update activity duration.",
+        description: "Failed to update break start time.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBreakEndTimeChange = async (value: string) => {
+    try {
+      await updateSetting.mutateAsync({ key: "breakEndTime", value });
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description: "Failed to update break end time.",
         variant: "destructive",
       });
     }
@@ -74,20 +89,23 @@ export function AdminControls() {
         </div>
         
         <div className="flex items-center space-x-2">
-          <Label className="text-sm font-medium text-gray-700">Activity Duration:</Label>
-          <div className="flex items-center space-x-2">
-            <Slider
-              value={[activityDuration]}
-              onValueChange={handleDurationChange}
-              max={30}
-              min={5}
-              step={1}
-              className="w-20"
-            />
-            <span className="text-sm font-medium text-blue-600 min-w-[50px]">
-              {activityDuration} min
-            </span>
-          </div>
+          <Label className="text-sm font-medium text-gray-700">Break Start:</Label>
+          <Input
+            type="time"
+            value={breakStartTime}
+            onChange={(e) => handleBreakStartTimeChange(e.target.value)}
+            className="w-24"
+          />
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Label className="text-sm font-medium text-gray-700">Break End:</Label>
+          <Input
+            type="time"
+            value={breakEndTime}
+            onChange={(e) => handleBreakEndTimeChange(e.target.value)}
+            className="w-24"
+          />
         </div>
         
         <Button
