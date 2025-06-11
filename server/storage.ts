@@ -1,4 +1,4 @@
-import { groups, settings, type Group, type InsertGroup, type Settings, type InsertSettings } from "@shared/schema";
+import { groups, settings, staff, type Group, type InsertGroup, type Settings, type InsertSettings, type Staff, type InsertStaff } from "@shared/schema";
 
 export interface IStorage {
   // Groups
@@ -14,28 +14,48 @@ export interface IStorage {
   getSetting(key: string): Promise<Settings | undefined>;
   setSetting(key: string, value: string): Promise<Settings>;
   getSettings(): Promise<Settings[]>;
+  
+  // Staff
+  getStaff(): Promise<Staff[]>;
+  createStaff(staff: InsertStaff): Promise<Staff>;
+  deleteStaff(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private groups: Map<number, Group>;
   private settings: Map<string, Settings>;
+  private staff: Map<number, Staff>;
   private currentGroupId: number;
   private currentSettingsId: number;
+  private currentStaffId: number;
 
   constructor() {
     this.groups = new Map();
     this.settings = new Map();
+    this.staff = new Map();
     this.currentGroupId = 1;
     this.currentSettingsId = 1;
+    this.currentStaffId = 1;
     
-    // Initialize default settings
+    // Initialize default settings and staff
     this.initializeDefaultSettings();
+    this.initializeDefaultStaff();
   }
 
   private async initializeDefaultSettings() {
     await this.setSetting("concurrentGroups", "2");
     await this.setSetting("activityDuration", "10");
     await this.setSetting("isBreakTime", "false");
+    await this.setSetting("breakStartTime", "");
+    await this.setSetting("breakEndTime", "");
+  }
+
+  private async initializeDefaultStaff() {
+    await this.createStaff({ name: "Mike Wilson" });
+    await this.createStaff({ name: "Jennifer Lee" });
+    await this.createStaff({ name: "David Chen" });
+    await this.createStaff({ name: "Sarah Martinez" });
+    await this.createStaff({ name: "Alex Thompson" });
   }
 
   // Groups
@@ -50,19 +70,20 @@ export class MemStorage implements IStorage {
   async createGroup(insertGroup: InsertGroup): Promise<Group> {
     const id = this.currentGroupId++;
     const queuePosition = await this.getNextQueuePosition();
+    const size = insertGroup.members.length;
     const group: Group = {
       id,
-      contactName: insertGroup.contactName,
       members: insertGroup.members,
-      size: insertGroup.size,
+      size,
       status: insertGroup.status || "waiting",
       assignedStaff: insertGroup.assignedStaff || null,
       notes: insertGroup.notes || null,
-      present: insertGroup.present !== undefined ? insertGroup.present : true,
+      present: insertGroup.present !== undefined ? insertGroup.present : false,
       registrationTime: new Date(),
       startTime: insertGroup.startTime || null,
       endTime: insertGroup.endTime || null,
       queuePosition,
+      activityDuration: insertGroup.activityDuration || 10,
     };
     this.groups.set(id, group);
     return group;
@@ -120,6 +141,22 @@ export class MemStorage implements IStorage {
 
   async getSettings(): Promise<Settings[]> {
     return Array.from(this.settings.values());
+  }
+
+  // Staff
+  async getStaff(): Promise<Staff[]> {
+    return Array.from(this.staff.values());
+  }
+
+  async createStaff(insertStaff: InsertStaff): Promise<Staff> {
+    const id = this.currentStaffId++;
+    const staffMember: Staff = { id, name: insertStaff.name };
+    this.staff.set(id, staffMember);
+    return staffMember;
+  }
+
+  async deleteStaff(id: number): Promise<boolean> {
+    return this.staff.delete(id);
   }
 }
 

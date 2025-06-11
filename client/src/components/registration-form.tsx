@@ -12,9 +12,8 @@ import { Users, Plus, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const registrationSchema = z.object({
-  contactName: z.string().min(1, "Contact name is required"),
   members: z.string().min(1, "At least one group member is required"),
-  size: z.number().min(1, "Group size must be at least 1").max(20, "Group size cannot exceed 20"),
+  activityDuration: z.number().min(5, "Activity duration must be at least 5 minutes").max(30, "Activity duration cannot exceed 30 minutes"),
 });
 
 type RegistrationForm = z.infer<typeof registrationSchema>;
@@ -33,9 +32,8 @@ export function RegistrationForm() {
   const form = useForm<RegistrationForm>({
     resolver: zodResolver(registrationSchema),
     defaultValues: {
-      contactName: "",
       members: "",
-      size: 1,
+      activityDuration: 10,
     },
   });
 
