@@ -51,12 +51,18 @@ export class MemStorage implements IStorage {
     const id = this.currentGroupId++;
     const queuePosition = await this.getNextQueuePosition();
     const group: Group = {
-      ...insertGroup,
       id,
-      queuePosition,
+      contactName: insertGroup.contactName,
+      members: insertGroup.members,
+      size: insertGroup.size,
+      status: insertGroup.status || "waiting",
+      assignedStaff: insertGroup.assignedStaff || null,
+      notes: insertGroup.notes || null,
+      present: insertGroup.present !== undefined ? insertGroup.present : true,
       registrationTime: new Date(),
-      startTime: null,
-      endTime: null,
+      startTime: insertGroup.startTime || null,
+      endTime: insertGroup.endTime || null,
+      queuePosition,
     };
     this.groups.set(id, group);
     return group;

@@ -57,7 +57,8 @@ export function GroupCard({ group, waitTime }: GroupCardProps) {
     }
   };
 
-  const handlePresentChange = async (present: boolean) => {
+  const handlePresentChange = async (checked: boolean | "indeterminate") => {
+    const present = checked === true;
     try {
       await updateGroup.mutateAsync({
         id: group.id,
@@ -150,14 +151,14 @@ export function GroupCard({ group, waitTime }: GroupCardProps) {
             
             <div className="flex items-center space-x-4">
               <Select
-                value={group.assignedStaff || ""}
-                onValueChange={handleStaffChange}
+                value={group.assignedStaff || "unassigned"}
+                onValueChange={(value) => handleStaffChange(value === "unassigned" ? "" : value)}
               >
                 <SelectTrigger className="w-40 text-sm">
                   <SelectValue placeholder="Assign Staff" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Assign Staff</SelectItem>
+                  <SelectItem value="unassigned">Assign Staff</SelectItem>
                   {staffMembers.map((staff) => (
                     <SelectItem key={staff} value={staff}>
                       {staff}
@@ -168,7 +169,7 @@ export function GroupCard({ group, waitTime }: GroupCardProps) {
               
               <label className="flex items-center text-sm">
                 <Checkbox
-                  checked={group.present}
+                  checked={group.present || false}
                   onCheckedChange={handlePresentChange}
                   className="mr-2"
                 />
