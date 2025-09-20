@@ -108,17 +108,17 @@ export function GroupCard({ group, waitTime }: GroupCardProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "in-progress": return "bg-blue-100 text-blue-800 border border-blue-200";
-      case "completed": return "bg-green-100 text-green-800 border border-green-200";
-      default: return "bg-gray-100 text-gray-800 border border-gray-200";
+      case "in-progress": return "bg-blue-100 text-black border-2 border-black";
+      case "completed": return "bg-yellow-400 text-black border-2 border-black";
+      default: return "bg-white text-black border-2 border-black";
     }
   };
 
   const getStatusIndicator = (status: string) => {
     switch (status) {
-      case "in-progress": return "w-3 h-3 bg-blue-600 rounded-full";
-      case "completed": return "w-3 h-3 bg-green-600 rounded-full";
-      default: return "w-3 h-3 bg-gray-400 rounded-full";
+      case "in-progress": return "w-3 h-3 bg-blue-400 rounded-full border border-black";
+      case "completed": return "w-3 h-3 bg-yellow-400 rounded-full border border-black";
+      default: return "w-3 h-3 bg-white rounded-full border border-black";
     }
   };
 
